@@ -29,4 +29,3 @@ distance = sig_time / 0.000058
 while True:
     print('Distance: {} centimeters'.format(distance))
 
-GPIO.cleanup()
