@@ -1,3 +1,4 @@
+from pathlib import Path
 import pyrebase
 import time
 config = {
@@ -10,11 +11,13 @@ config = {
     "appId": "1:136524713787:web:a82bfb6f69f09e5d37b11e",
     "measurementId": "G-Y5GXZ7BVHV"
 }
-folder_name = time.strftime("%Y%m%d")
-file_name = time.strftime("%H%M%S")
+folder_name = time.strftime("%d-%m-%Y")
+file_name = time.strftime("%H:%M")
+Path(file_name+'.jpg').touch()
+print(file_name+' '+ folder_name + ' was sucessfully uploaded')
 prath = pyrebase.initialize_app(config)
 storage = prath.storage()
 path_cloud = folder_name+"/"+file_name+".jpg"
-path_local = "prathamesh.jpg"
+path_local = file_name+'.jpg'
 storage.child(path_cloud).put(path_local)
 

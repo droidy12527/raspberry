@@ -1,12 +1,7 @@
-import RPi.GPIO as GPIO
+import pyrebase
 import time
+import RPi.GPIO as GPIO
 import picamera
-import smtplib
-from email.MIMEMultipart import MIMEMultipart
-from email.MIMEText import MIMEText
-from email.MIMEBase import MIMEBase
-from email import encoders
-from email.mime.image import MIMEImage
 
 GPIO.setwarnings(False)
 GPIO.cleanup()
@@ -21,6 +16,27 @@ GPIO.setup(TRIG, GPIO.OUT)
 GPIO.setup(ECHO, GPIO.IN)
 GPIO.setup(LED, GPIO.OUT)
 GPIO.setup(BUZZER, GPIO.OUT)
+
+def upload_cloud(data):
+	config = {
+	    "apiKey": "AIzaSyC-qt2eSGN9MolkfLHhU8DKmLXFPnMpuNg",
+	    "authDomain": "intruderdetector-a5506.firebaseapp.com",
+	    "databaseURL": "https://intruderdetector-a5506.firebaseio.com",
+	    "projectId": "intruderdetector-a5506",
+	    "storageBucket": "intruderdetector-a5506.appspot.com",
+	    "messagingSenderId": "136524713787",
+	    "appId": "1:136524713787:web:a82bfb6f69f09e5d37b11e",
+	    "measurementId": "G-Y5GXZ7BVHV"
+	}
+	folder_name = time.strftime("%d-%m-%Y")
+	file_name = data
+	print(file_name+' '+ folder_name + ' was sucessfully uploaded')
+	prath = pyrebase.initialize_app(config)
+	storage = prath.storage()
+	path_cloud = folder_name+"/"+file_name+".jpg"
+	path_local = file_name+".jpg"
+	storage.child(path_cloud).put(path_local)
+
 
 def led_light():
     GPIO.output(LED, GPIO.HIGH)
@@ -47,49 +63,20 @@ def get_distance():
     distance = sig_time / 0.000058
     print('Distance: {} cm'.format(distance))
     return distance
-
 while True:
     distance = get_distance()
     camera = picamera.PiCamera()
     time.sleep(0.05)
     if distance <15:
-         
-        fromaddr = "hackerbadshah1010@gmail.com"    # change the email address accordingly
-        toaddr = "gundiaramasu@gmail.com"
-         
-        mail = MIMEMultipart()
-         
-        mail['From'] = fromaddr
-        mail['To'] = toaddr
-        mail['Subject'] = "Attachment"
-        body = "Please find the attachment"
-
-        def sendMail(data):
-            mail.attach(MIMEText(body, 'plain'))
-            print data
-            dat='%s.jpg'%data
-            print dat
-            attachment = open(dat, 'rb')
-            image=MIMEImage(attachment.read())
-            attachment.close()
-            mail.attach(image)
-            server = smtplib.SMTP('smtp.gmail.com', 587)
-            server.starttls()
-            server.login(fromaddr, "xdahackeranddeveloper")
-            text = mail.as_string()
-            server.sendmail(fromaddr, toaddr, text)
-            server.quit()
-
         def capture_image():
-            data= time.strftime("%d_%b_%Y|%H:%M:%S")
+            data= time.strftime("%H-%M")
             camera.start_preview()
             time.sleep(5)
             print data
             camera.capture('%s.jpg'%data)
             camera.stop_preview()
             time.sleep(1)
-            sendMail(data)
-
+           upload_cloud(data) 
         camera.rotation=180
         camera.awb_mode= 'auto'
         camera.brightness=55
